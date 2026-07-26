@@ -216,3 +216,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# Jupyter
+.ipynb_checkpoints/
+
+# Virtual environment
+venv/
+
+# Mac
+.DS_Store
+
+
