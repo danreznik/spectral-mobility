@@ -35,3 +35,14 @@ Result: no clear pattern. Gini stayed roughly the same across almost all spectra
 - Tested if income spacing changes how strong entropy-Gini relationship is
 - First test looked like it did, but turned out to be noise after ran repeated trials
 - Going to pivot to conductance and Cheeger's inequality
+
+## 7/30/26
+
+- Verified conductance function against Cheeger's inequality on a toy matrix
+- Added conductance to regression (added almost nothing)
+- Found entropy + extreme mass gets R^2 up to 0.8
+- Extended to 5 income brackets (R^2 dropped to 0.5)
+- Tested income variance instead of extreme mass (did worse 0.31 vs 0.6), probably because Gini is sensitive to extremes
+- Tested model against 2 real matrices (PSID household, Chetty. et al intergenerational)
+- Model predicted real Gini within 0.06 both times (consistent error)
+- Found both real matrices give nearly the same Gini despite different mobility. Limitation since quintiles are doubly stochastic by construction
