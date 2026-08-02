@@ -46,3 +46,14 @@ Result: no clear pattern. Gini stayed roughly the same across almost all spectra
 - Tested model against 2 real matrices (PSID household, Chetty. et al intergenerational)
 - Model predicted real Gini within 0.06 both times (consistent error)
 - Found both real matrices give nearly the same Gini despite different mobility. Limitation since quintiles are doubly stochastic by construction
+
+## 8/2/26
+
+- Tracked Gini generation by generation, error = |Gini(t)-Gini(final)|
+- Plotted error on a log scale (straight line = geometric decay)
+- Fit the decay rate, compared to Markov chain convergence theory predicted log |lambda_2| (-0.661 vs -0.693)
+- Checked ratios between consecutive errors: found early points decayed slightly slower (contamination from lambda_3) and late points got noisy
+- Refit using just the clean middle window, got 0.668, within 1% of true value
+- Checked across repeated matrices, pattern held
+- Derived the exact formula for the distribution at any time t using eigendecomposition (sum of eigenvalue^t terms), verified simulation matched exactly
+
