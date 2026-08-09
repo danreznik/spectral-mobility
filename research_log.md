@@ -57,3 +57,10 @@ Result: no clear pattern. Gini stayed roughly the same across almost all spectra
 - Checked across repeated matrices, pattern held
 - Derived the exact formula for the distribution at any time t using eigendecomposition (sum of eigenvalue^t terms), verified simulation matched exactly
 
+## 8/8/26
+
+- Extracted working functions into standalone simulator.py
+- Added (analyze_matrix): paste in a matrix, get metrics back
+- Spectral gap and conductance weren't normalizing rows, inconsistent rounding
+- Added input validation (square matrix, no negatives, no zero rows)
+- Re-tested to verify match
