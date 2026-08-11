@@ -1,6 +1,6 @@
 # Research Log
 
-Raw, dated notes on process.
+Raw notes on process.
 (See README.md for the clean project summary.)
 
 ## 7/26/26
@@ -64,3 +64,9 @@ Result: no clear pattern. Gini stayed roughly the same across almost all spectra
 - Spectral gap and conductance weren't normalizing rows, inconsistent rounding
 - Added input validation (square matrix, no negatives, no zero rows)
 - Re-tested to verify match
+
+## 8/11/26
+
+- Reviewed simulator.py for bugs, fixed issues (off-by-one error, missing input validation, unused parameter, divide-by-zero edge case)
+- Added a test suite (10 automated checks) to verify results
+- Re-confirmed core findings are unaffected by fixes
