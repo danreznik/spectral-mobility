@@ -48,16 +48,18 @@ def compute_stationary_distribution(transition_matrix, tol=1e-10, max_iters=1000
     if np.all(vec <= 0):
         vec = -vec
 
-    if np.any(vec < -1e-8) or vec.sum() <= 0:
+    neg_tol = 1e-12
+    if np.any(vec < -neg_tol) or vec.sum() <= 0:
         vec = _power_iteration_stationary(matrix, tol, max_iters)
     else:
-        vec = np.clip(vec, 0, None)
+        vec = np.clip(vec, 0.0, None)
 
     total = vec.sum()
     if total <= 0:
         vec = _power_iteration_stationary(matrix, tol, max_iters)
         total = vec.sum()
 
+    vec = np.clip(vec, 0.0, None)
     return vec / total
 
 
@@ -81,6 +83,8 @@ def gini_coefficient(incomes):
         raise ValueError("incomes must contain at least one element.")
     if not np.all(np.isfinite(incomes)):
         raise ValueError("incomes contains NaN or Inf values.")
+    if np.any(incomes < 0):
+        raise ValueError("incomes cannot contain negative values.")
     total_income = incomes.sum()
     if total_income == 0:
         return 0.0
@@ -160,7 +164,7 @@ def conductance(transition_matrix, stationary_dist, max_exact_n=16):
             f"of states."
         )
     if n < 2:
-        return None
+        return 0.0
 
     pi_total = pi.sum()
     if pi_total <= 0:
@@ -187,7 +191,7 @@ def conductance(transition_matrix, stationary_dist, max_exact_n=16):
     return min_phi if min_phi is not None else 0.0
 
 
-def distribution_entropy(distribution, normalize=True):
+def distribution_entropy(distribution, normalize=True, base=None):
     p = np.asarray(distribution, dtype=float)
     if p.size == 0:
         return 0.0
@@ -205,15 +209,27 @@ def distribution_entropy(distribution, normalize=True):
     nonzero = p[p > 0]
     if nonzero.size == 0:
         return 0.0
-    return float(-np.sum(nonzero * np.log(nonzero)))
+    entropy = float(-np.sum(nonzero * np.log(nonzero)))
+    if base is not None:
+        return entropy / np.log(base)
+    return entropy
 
 
-def extreme_mass(distribution):
+def extreme_mass(distribution, normalize=True):
     p = np.asarray(distribution, dtype=float)
     if p.size == 0:
         raise ValueError("distribution must be non-empty.")
     if not np.all(np.isfinite(p)):
         raise ValueError("distribution contains NaN or Inf values.")
+    if np.any(p < 0):
+        raise ValueError("distribution cannot contain negative values.")
+
+    if normalize:
+        s = p.sum()
+        if s <= 0:
+            raise ValueError("distribution must sum to a positive value.")
+        p = p / s
+
     return float(p[0] + p[-1])
 
 
@@ -249,6 +265,10 @@ def random_transition_matrix(size=3, seed=None):
     rng = np.random.default_rng(seed)
     matrix = rng.random((size, size))
     row_sums = matrix.sum(axis=1, keepdims=True)
+    if np.any(row_sums == 0):
+        zero_rows = (row_sums.ravel() == 0)
+        matrix[zero_rows, :] = 1.0 / size
+        row_sums = matrix.sum(axis=1, keepdims=True)
     return matrix / row_sums
 
 
@@ -264,11 +284,19 @@ def simulate_population(transition_matrix, initial_distribution, generations=100
         )
     if not np.all(np.isfinite(distribution)):
         raise ValueError("initial_distribution contains NaN or Inf values.")
-    if generations < 0:
-        raise ValueError("generations must be >= 0.")
+    if np.any(distribution < 0):
+        raise ValueError("initial_distribution cannot contain negative values.")
+
+    s = distribution.sum()
+    if s <= 0:
+        raise ValueError("initial_distribution must sum to a positive value.")
+    distribution = distribution / s
+
+    if not isinstance(generations, (int, np.integer)) or generations < 0:
+        raise ValueError("generations must be a nonnegative integer.")
 
     history = [distribution.copy()]
-    for _ in range(generations):
+    for _ in range(int(generations)):
         distribution = distribution @ matrix
         history.append(distribution.copy())
 
@@ -291,8 +319,22 @@ def exact_distribution_at_time(transition_matrix, initial_distribution, t):
             f"initial_distribution length ({p0.size}) must match "
             f"transition matrix size ({n})."
         )
+    if not np.all(np.isfinite(p0)):
+        raise ValueError("initial_distribution contains NaN or Inf values.")
+    if np.any(p0 < 0):
+        raise ValueError("initial_distribution cannot contain negative values.")
+    s = p0.sum()
+    if s <= 0:
+        raise ValueError("initial_distribution must sum to a positive value.")
+    p0 = p0 / s
 
     eigenvalues, eigenvectors = np.linalg.eig(matrix.T)
+
+    condition_number = np.linalg.cond(eigenvectors)
+    if condition_number > 1e12:
+        history = simulate_population(matrix, p0, generations=int(t))
+        return history[-1]
+
     try:
         c = np.linalg.solve(eigenvectors, p0)
     except np.linalg.LinAlgError as e:
@@ -302,8 +344,17 @@ def exact_distribution_at_time(transition_matrix, initial_distribution, t):
             "Use simulate_population() instead for this matrix."
         ) from e
 
-    p_t = eigenvectors @ (c * (eigenvalues ** t))
-    return np.real(p_t)
+    p_t = eigenvectors @ (c * (eigenvalues ** int(t)))
+    p_t = np.real(p_t)
+
+    p_t = np.clip(p_t, 0.0, None)
+    total = p_t.sum()
+    if total <= 0:
+        raise np.linalg.LinAlgError(
+            "Resulting distribution is degenerate (nonpositive after "
+            "clipping numerical noise)."
+        )
+    return p_t / total
 
 
 def distribution_to_incomes(distribution, income_values, population_size=10000):
@@ -319,8 +370,9 @@ def distribution_to_incomes(distribution, income_values, population_size=10000):
         raise ValueError("distribution contains NaN or Inf values.")
     if np.any(p < 0):
         raise ValueError("distribution cannot contain negative values.")
-    if population_size < 1:
-        raise ValueError("population_size must be >= 1.")
+    if not isinstance(population_size, (int, np.integer)) or population_size < 1:
+        raise ValueError("population_size must be an integer >= 1.")
+    population_size = int(population_size)
 
     s = p.sum()
     if s <= 0:
@@ -360,6 +412,11 @@ def analyze_matrix(transition_matrix, income_values, generations=100, initial_di
 
     steady_state = compute_stationary_distribution(matrix)
 
+    try:
+        distribution_at_T = exact_distribution_at_time(matrix, initial_distribution, generations)
+    except np.linalg.LinAlgError:
+        distribution_at_T = simulate_population(matrix, initial_distribution, generations)[-1]
+
     gap, lambda2 = spectral_gap(matrix)
     phi = conductance(matrix, steady_state) if n <= 16 else None
     ent = distribution_entropy(steady_state)
@@ -369,6 +426,7 @@ def analyze_matrix(transition_matrix, income_values, generations=100, initial_di
 
     return {
         "steady_state": steady_state,
+        "distribution_at_T": distribution_at_T,
         "gini": gini,
         "spectral_gap": gap,
         "second_eigenvalue": lambda2,
@@ -386,10 +444,12 @@ def print_report(results):
     print("Spectral gap:", round(float(results["spectral_gap"]), 4))
 
     cond = results.get("conductance")
-    print("Conductance:", "N/A (too many states)" if cond is None else round(float(cond), 4))
+    print("Conductance:", "N/A" if cond is None else round(float(cond), 4))
 
     print("Entropy:", round(float(results["entropy"]), 4))
     print("Extreme mass:", round(float(results["extreme_mass"]), 4))
+    if "income_variance" in results:
+        print("Income variance:", round(float(results["income_variance"]), 4))
 
 
 # Demo / command-line entry point
