@@ -270,7 +270,7 @@ def income_variance(distribution, income_values, normalize=True):
 # Simulation
 
 def random_transition_matrix(size=3, seed=None):
-    if not isinstance(size, int) or size < 1:
+    if not isinstance(size, (int, np.integer)) or size < 1:
         raise ValueError(f"size must be a positive integer, got {size!r}.")
     rng = np.random.default_rng(seed)
     matrix = rng.random((size, size))
