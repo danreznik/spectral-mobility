@@ -211,11 +211,13 @@ def distribution_entropy(distribution, normalize=True, base=None):
         return 0.0
     entropy = float(-np.sum(nonzero * np.log(nonzero)))
     if base is not None:
+        if base <= 0 or base == 1:
+            raise ValueError("base must be positive and not equal to 1.")
         return entropy / np.log(base)
     return entropy
 
 
-def extreme_mass(distribution, normalize=True):
+def extreme_mass(distribution, income_values=None, normalize=True):
     p = np.asarray(distribution, dtype=float)
     if p.size == 0:
         raise ValueError("distribution must be non-empty.")
@@ -230,7 +232,15 @@ def extreme_mass(distribution, normalize=True):
             raise ValueError("distribution must sum to a positive value.")
         p = p / s
 
-    return float(p[0] + p[-1])
+    if income_values is None:
+        return float(p[0] + p[-1])
+
+    x = np.asarray(income_values, dtype=float)
+    if x.size != p.size:
+        raise ValueError("income_values must have the same length as distribution.")
+    i_min = int(np.argmin(x))
+    i_max = int(np.argmax(x))
+    return float(p[i_min] + p[i_max])
 
 
 def income_variance(distribution, income_values, normalize=True):
@@ -420,7 +430,7 @@ def analyze_matrix(transition_matrix, income_values, generations=100, initial_di
     gap, lambda2 = spectral_gap(matrix)
     phi = conductance(matrix, steady_state) if n <= 16 else None
     ent = distribution_entropy(steady_state)
-    ext = extreme_mass(steady_state)
+    ext = extreme_mass(steady_state, income_values)
     var = income_variance(steady_state, income_values)
     gini = gini_from_distribution(steady_state, income_values)
 
