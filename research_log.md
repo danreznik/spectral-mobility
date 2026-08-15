@@ -1,7 +1,7 @@
 # Research Log
 
-Raw notes on process.
-(See README.md for the clean project summary.)
+Raw notes
+(See README.md for final paper)
 
 ## 7/26/26
 
@@ -70,3 +70,11 @@ Result: no clear pattern. Gini stayed roughly the same across almost all spectra
 - Reviewed simulator.py for bugs, fixed issues (off-by-one error, missing input validation, unused parameter, divide-by-zero edge case)
 - Added a test suite (10 automated checks) to verify results
 - Re-confirmed core findings are unaffected by fixes
+
+## 8/14/26
+
+- Built reproduce_results.py to regenerate all core findings from one script
+- Verified each against notebook
+- Found real-data validation error was smaller with final code than original exploration found. Fixed stationary distribution and extreme_mass function.
+- Updated paper to use corrected numbers
+- Polished plots for paper
