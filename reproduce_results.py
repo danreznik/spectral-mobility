@@ -3,6 +3,14 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 import os
 
+plt.rcParams.update({
+    "font.size": 13,
+    "axes.grid": True,
+    "grid.alpha": 0.3,
+    "axes.edgecolor": "#333333",
+    "axes.labelweight": "medium",
+})
+
 from simulator import (
     random_transition_matrix,
     compute_stationary_distribution,
@@ -67,12 +75,11 @@ r2_gap = model_gap.score(X_gap, y)
 print(f"Spectral gap alone -> R^2 = {r2_gap:.3f}")
 
 plt.figure(figsize=(7, 5))
-plt.scatter(data["spectral_gap"], data["gini"], alpha=0.6)
-plt.xlabel("Spectral Gap (mixing speed)")
-plt.ylabel("Steady-State Gini Coefficient")
-plt.title(f"Finding 1: Spectral Gap vs Gini (R^2 = {r2_gap:.3f})")
+plt.scatter(data["spectral_gap"], data["gini"], alpha=0.65, s=55, color="#4C72B0", edgecolor="white", linewidth=0.5)
+plt.xlabel("Spectral gap (mixing speed)")
+plt.ylabel("Steady-state Gini coefficient")
 plt.tight_layout()
-plt.savefig(f"{OUTPUT_DIR}/finding1_spectral_gap_vs_gini.png", dpi=150)
+plt.savefig(f"{OUTPUT_DIR}/finding1_spectral_gap_vs_gini.png", dpi=200)
 plt.close()
 print(f"Saved: {OUTPUT_DIR}/finding1_spectral_gap_vs_gini.png\n")
 
@@ -98,12 +105,14 @@ r2_features = model_features.score(X_features, y)
 print(f"Entropy + extreme mass -> R^2 = {r2_features:.3f}")
 
 plt.figure(figsize=(7, 5))
-plt.scatter(data["entropy"], data["gini"], alpha=0.6, color="darkorange")
-plt.xlabel("Steady-State Entropy")
-plt.ylabel("Steady-State Gini Coefficient")
-plt.title(f"Finding 3: Entropy vs Gini (R^2 = {r2_features:.3f} with extreme mass added)")
+plt.scatter(data["entropy"], data["gini"], alpha=0.65, s=55, color="#DD8452", edgecolor="white", linewidth=0.5)
+z = np.polyfit(data["entropy"], data["gini"], 1)
+x_line = np.linspace(data["entropy"].min(), data["entropy"].max(), 100)
+plt.plot(x_line, np.poly1d(z)(x_line), color="#333333", linestyle="--", linewidth=1.3, alpha=0.8)
+plt.xlabel("Steady-state entropy")
+plt.ylabel("Steady-state Gini coefficient")
 plt.tight_layout()
-plt.savefig(f"{OUTPUT_DIR}/finding3_entropy_vs_gini.png", dpi=150)
+plt.savefig(f"{OUTPUT_DIR}/finding3_entropy_vs_gini.png", dpi=200)
 plt.close()
 print(f"Saved: {OUTPUT_DIR}/finding3_entropy_vs_gini.png")
 
@@ -161,13 +170,13 @@ print(f"Relative difference: {abs(fitted_rate - true_rate) / abs(true_rate) * 10
 
 plt.figure(figsize=(7, 5))
 plot_errors = errors[errors > 1e-14]
-plt.plot(range(len(plot_errors)), plot_errors, marker="o")
+plt.plot(range(len(plot_errors)), plot_errors, marker="o", markersize=6,
+         color="#55A868", linewidth=1.8, markerfacecolor="#55A868", markeredgecolor="white", markeredgewidth=0.7)
 plt.yscale("log")
 plt.xlabel("Generation")
-plt.ylabel("|Gini(t) - Gini(final)| (log scale)")
-plt.title("Finding 5: Gini Converges Geometrically at Rate log|lambda_2|")
+plt.ylabel("|Gini(t) \u2212 Gini(\u221e)|  (log scale)")
 plt.tight_layout()
-plt.savefig(f"{OUTPUT_DIR}/finding5_convergence_rate.png", dpi=150)
+plt.savefig(f"{OUTPUT_DIR}/finding5_convergence_rate.png", dpi=200)
 plt.close()
 print(f"Saved: {OUTPUT_DIR}/finding5_convergence_rate.png\n")
 
