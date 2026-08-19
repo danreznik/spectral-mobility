@@ -12,9 +12,7 @@ Raw notes
   income groups over generations
 - Built distribution_to_incomes() to convert group fractions into an income list for Gini calculation
 - Compared two toy 3-state matrices
-
-Result: the more mobile matrix had a slightly higher Gini, not lower. 
-This shows spectral gap and Gini coefficient are not simply correlated.
+- More mobile matrix had a slightly higher Gini
 
 ## 7/27/26
 
@@ -24,8 +22,7 @@ This shows spectral gap and Gini coefficient are not simply correlated.
 - Generated 50 random matrices
 - Spectral gap and steady-state Gini for each matrix
 - Model scatter plot
-
-Result: no clear pattern. Gini stayed roughly the same across almost all spectral gap values. A few matrices were outliers with much lower Gini, one especially low (0.05).
+- Gini stayed the same across spectral gaps values, few outliers
 
 ## 7/29/26
 
@@ -78,3 +75,8 @@ Result: no clear pattern. Gini stayed roughly the same across almost all spectra
 - Found real-data validation error was smaller with final code than original exploration found. Fixed stationary distribution and extreme_mass function.
 - Updated paper to use corrected numbers
 - Polished plots for paper
+
+## 8/18/26
+
+- Finished and uploaded final paper
+- Rewrote README to link directly to the finished paper PDF
